@@ -21,11 +21,9 @@
     .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
     .btn { border:0; background:var(--primary); color:#fff; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; }
     .btn.alt { background:#7f7b4c; }
-
-    /* ---- Mapa: sin padding en el contenedor para que Leaflet mida bien ---- */
-    .map-card { padding:0; overflow:hidden; }     /* quita padding y oculta desbordes */
-    #map { width:100%; height:65vh; }             /* alto fijo */
-    .leaflet-container { width:100%; height:100%; } /* asegura ocupar todo */
+    .map-card { padding:0; overflow:hidden; }
+    #map { width:100%; height:65vh; }
+    .leaflet-container { width:100%; height:100%; }
   </style>
 </head>
 <body>
@@ -42,7 +40,6 @@
       </div>
     </div>
 
-    <!-- Contenedor del mapa SIN padding -->
     <div class="card map-card" aria-label="Mapa de seguimiento">
       <div id="map"></div>
     </div>
@@ -63,6 +60,7 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js"></script>
+  <!-- cache-busting: usa un nombre NUEVO o query param -->
+  <script src="app.v2.js"></script>
 </body>
 </html>
