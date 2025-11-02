@@ -6,11 +6,11 @@ const statusEl = document.getElementById('status');
 sessionEl.textContent = sessionId;
 
 // ---- Mapa Leaflet -------------------------------------
-const map = L.map('map', { zoomControl: true });
+// Bogotá por defecto
+const BOGOTA = [4.7110, -74.0721];
 
-// Punto inicial (CDMX centro) — puedes cambiarlo
-const start = [19.4326, -99.1332];
-map.setView(start, 14);
+const map = L.map('map', { zoomControl: true });
+map.setView(BOGOTA, 14);
 
 // Capa base (OpenStreetMap)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -18,27 +18,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap'
 }).addTo(map);
 
+// Asegura que Leaflet re-calcula el tamaño una vez que todo cargó
+setTimeout(() => map.invalidateSize(), 0);
+window.addEventListener('resize', () => map.invalidateSize());
+
 // Marcador del usuario + ruta
-const marker = L.marker(start).addTo(map);
-const path = [start];
+const marker = L.marker(BOGOTA).addTo(map);
+const path = [BOGOTA];
 const poly = L.polyline(path, { weight: 4 }).addTo(map);
 
 // ---- Simulación de movimiento --------------------------
-// Crea una “ruta” corta alrededor del punto inicial
 function makeRoute(origin, steps = 40, delta = 0.0008) {
   const pts = [];
+  let last = origin.slice();
   for (let i = 0; i < steps; i++) {
     const dx = (Math.random() - 0.5) * delta;
     const dy = (Math.random() - 0.5) * delta;
-    origin = [origin[0] + dx, origin[1] + dy];
-    pts.push(origin);
+    last = [last[0] + dx, last[1] + dy];
+    pts.push(last);
   }
   return pts;
 }
 
-let simulated = makeRoute(start);
+let simulated = makeRoute(BOGOTA);
 
-// Avanza el marcador cada N ms
 let i = 0;
 const intervalMs = 1200;
 let timer = setInterval(() => {
@@ -56,7 +59,8 @@ let timer = setInterval(() => {
 
 // ---- Controles ----------------------------------------
 document.getElementById('center').addEventListener('click', () => {
-  map.panTo(marker.getLatLng());
+  const p = marker.getLatLng();
+  map.setView(p, map.getZoom(), { animate: true });
 });
 
 document.getElementById('copy').addEventListener('click', async () => {
