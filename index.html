@@ -60,7 +60,31 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Firebase SDK (modular) -->
+  <script type="module">
+    // Sustituye con TU CONFIG (Project settings > Web App)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCj_1rCBHxBxnWX-XeAKDoIHC-gOVre9r8",
+      authDomain: "mura-f613c.firebaseapp.com",
+      projectId: "mura-f613c",
+      storageBucket: "mura-f613c.firebasestorage.app",
+      messagingSenderId: "310090419131",
+      appId: "1:310090419131:web:aecabd175fba5d3b22529e"
+    };
+  
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getFirestore, doc, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+  
+    // Exponemos db global para app.v3.js
+    window.__mura_db = db;
+    window.__mura_firestore = { doc, collection, onSnapshot, query, orderBy, limit };
+  </script>
+  <script src="app.v3.js" type="module"></script>
   <!-- cache-busting: usa un nombre NUEVO o query param -->
   <script src="app.v2.js"></script>
 </body>
 </html>
+
