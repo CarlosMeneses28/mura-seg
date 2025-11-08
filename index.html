@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1c4d6b" />
   <link rel="manifest" href="manifest.json" />
   <!-- Leaflet (CDN) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j6M17C3R8v74rF5t6xJvNusKfLxVxyP8g+Z8C2Y=" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <style>
     :root { --primary:#1c4d6b; --bg:#edebe6; --text:#1d1d1d; }
     * { box-sizing: border-box; }
@@ -21,9 +21,9 @@
     .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
     .btn { border:0; background:var(--primary); color:#fff; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; }
     .btn.alt { background:#7f7b4c; }
-    .map-card { padding:0; overflow:hidden; min-height: 400px;}
-    #map { width:100%; height:65vh; min-height: 400px;}
-    .leaflet-container { width:100%; height:100%; background: #e8f1f7;}
+    .map-card { padding:0; overflow:hidden; }
+    #map { width:100%; height:65vh; min-height: 400px; }
+    .leaflet-container { width:100%; height:100%; background: #e8f1f7; }
   </style>
 </head>
 <body>
@@ -59,7 +59,7 @@
   <footer style="text-align:center; padding:20px; color:#777; font-size:12px;">© MÜRA — Demo</footer>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <!-- Firebase SDK (modular) -->
   <script type="module">
     // Sustituye con TU CONFIG (Project settings > Web App)
@@ -73,7 +73,15 @@
     };
   
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, doc, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      doc, 
+      collection, 
+      onSnapshot, 
+      query, 
+      orderBy, 
+      limit 
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
   
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -83,10 +91,5 @@
     window.__mura_firestore = { doc, collection, onSnapshot, query, orderBy, limit };
   </script>
   <script src="app.v3.js" type="module"></script>
-  <!-- cache-busting: usa un nombre NUEVO o query param -->
 </body>
 </html>
-
-
-
-
