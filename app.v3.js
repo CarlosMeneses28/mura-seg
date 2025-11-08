@@ -184,3 +184,84 @@ setTimeout(() => {
     container: document.getElementById('map').getBoundingClientRect()
   });
 }, 1000);
+
+// Después de tu código existente, añade:
+console.log('=== DEBUG FIREBASE ===');
+
+// Verificar la configuración
+console.log('Firebase config cargada:', !!window.__mura_db);
+console.log('Session ID:', sessionId);
+
+// Función para verificar manualmente los datos
+async function checkFirestoreData() {
+  try {
+    const db = window.__mura_db;
+    const { doc, getDoc, collection, getDocs } = window.__mura_firestore;
+    
+    // Verificar sesión
+    const sessRef = doc(db, 'sessions', sessionId);
+    const sessionSnap = await getDoc(sessRef);
+    console.log('📋 Sesión en Firestore:', sessionSnap.exists() ? sessionSnap.data() : 'NO EXISTE');
+    
+    // Verificar posiciones
+    const posCol = collection(sessRef, 'positions');
+    const positionsSnap = await getDocs(posCol);
+    console.log('📍 Número de posiciones:', positionsSnap.size);
+    
+    positionsSnap.forEach(doc => {
+      console.log('   Posición:', doc.id, doc.data());
+    });
+    
+  } catch (error) {
+    console.error('❌ Error verificando Firestore:', error);
+  }
+}
+
+// Ejecutar después de 3 segundos para dar tiempo a la carga
+setTimeout(checkFirestoreData, 3000);
+
+// Verificar soporte de geolocalización
+console.log('🌍 Geolocalización soportada:', !!navigator.geolocation);
+
+// Probar geolocalización manualmente
+function testGeolocation() {
+  if (!navigator.geolocation) {
+    console.log('❌ Geolocalización NO soportada');
+    return;
+  }
+  
+  console.log('🔍 Probando geolocalización...');
+  
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      console.log('✅ Geolocalización exitosa:');
+      console.log('   Lat:', position.coords.latitude);
+      console.log('   Lng:', position.coords.longitude);
+      console.log('   Precisión:', position.coords.accuracy + 'm');
+    },
+    (error) => {
+      console.log('❌ Error geolocalización:');
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          console.log('   Permiso denegado por el usuario');
+          break;
+        case error.POSITION_UNAVAILABLE:
+          console.log('   Posición no disponible');
+          break;
+        case error.TIMEOUT:
+          console.log('   Timeout');
+          break;
+        default:
+          console.log('   Error desconocido:', error);
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+// Ejecutar test
+setTimeout(testGeolocation, 2000);
