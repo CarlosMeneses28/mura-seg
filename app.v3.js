@@ -6,13 +6,13 @@ const sessionEl = document.getElementById('session');
 const statusEl = document.getElementById('status');
 sessionEl.textContent = sessionId;
 
-// Mapa Leaflet - Inicializar con vista por defecto
+// Mapa Leaflet - Inicializar con vista por defecto (Bogotá como fallback)
 const BOGOTA = [4.7110, -74.0721];
 let map, marker, poly;
 
 // Función para inicializar el mapa de forma segura
 function initializeMap(center, zoom) {
-    console.log('🗺️ Inicializando mapa en:', center, 'zoom:', zoom);
+    console.log('🗺️ Inicializando mapa en ubicación por defecto');
     
     map = L.map('map', { 
         zoomControl: true,
@@ -39,28 +39,22 @@ function initializeMap(center, zoom) {
 const db = window.__mura_db;
 const { doc, collection, onSnapshot, query, orderBy, limit } = window.__mura_firestore;
 
-// Función para actualizar el mapa con nueva posición
+// Función para actualizar el mapa con nueva posición de la persona en emergencia
 function updateMapPosition(lat, lng) {
     const newPos = [lat, lng];
-    console.log('📍 Actualizando posición:', newPos);
+    console.log('📍 Actualizando posición de la persona en emergencia:', newPos);
     
     if (marker) {
         marker.setLatLng(newPos);
     }
     
     if (map) {
-        // Solo centrar automáticamente si el usuario no ha movido el mapa manualmente
-        const currentCenter = map.getCenter();
-        const distance = map.distance(currentCenter, newPos);
-        
-        // Si está lejos del marcador, centrar (umbral de ~2km)
-        if (distance > 2000) {
-            console.log('🎯 Centrando mapa en nueva posición');
-            map.setView(newPos, map.getZoom(), { 
-                animate: true,
-                duration: 1.0
-            });
-        }
+        // SIEMPRE centrar en la persona en emergencia (no en el visor)
+        console.log('🎯 Centrando mapa en persona en emergencia');
+        map.setView(newPos, Math.max(map.getZoom(), 14), { 
+            animate: true,
+            duration: 1.0
+        });
     }
     
     statusEl.textContent = 'Actualizado: ' + new Date().toLocaleTimeString();
@@ -71,10 +65,18 @@ function updatePolyline(positions) {
     if (poly) {
         console.log('🔄 Actualizando ruta con', positions.length, 'puntos');
         poly.setLatLngs(positions);
+        
+        // Si hay posiciones, centrar en la última (más reciente)
+        if (positions.length > 0) {
+            const lastPosition = positions[positions.length - 1];
+            if (map) {
+                map.setView(lastPosition, Math.max(map.getZoom(), 14));
+            }
+        }
     }
 }
 
-// Función para inicializar Firestore después del mapa
+// Función para inicializar Firestore
 function initializeFirestore() {
     if (sessionId && sessionId !== '(sin id)') {
         const sessRef = doc(db, 'sessions', sessionId);
@@ -92,6 +94,7 @@ function initializeFirestore() {
                     updateMapPosition(d.lastLat, d.lastLng);
                 } else {
                     console.log('ℹ️ Sesión sin coordenadas aún');
+                    statusEl.textContent = 'Esperando primera ubicación...';
                 }
             } else {
                 console.warn('❌ Sesión no encontrada en Firestore');
@@ -115,56 +118,27 @@ function initializeFirestore() {
                 updatePolyline(pts);
             } else {
                 console.log('ℹ️ No hay puntos de posición aún');
+                statusEl.textContent = 'Esperando ubicación de la persona...';
             }
         }, (error) => {
             console.error('💥 Error escuchando posiciones:', error);
         });
     } else {
         console.warn('⚠️ No hay sessionId válido');
-        statusEl.textContent = 'Esperando sessionId...';
+        statusEl.textContent = 'Enlace inválido - falta sessionId';
     }
 }
 
-// Inicialización principal
+// Inicialización principal - SIN geolocalización del visor
 function initializeApp() {
-    // Intentar geolocalización primero
-    if (navigator.geolocation) {
-        console.log('🌍 Intentando geolocalización...');
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const userLocation = [position.coords.latitude, position.coords.longitude];
-                console.log('✅ Ubicación encontrada:', userLocation);
-                
-                // Inicializar mapa con ubicación real
-                initializeMap(userLocation, 14);
-                statusEl.textContent = 'Ubicación detectada - ' + new Date().toLocaleTimeString();
-                
-                // Ahora inicializar Firestore
-                initializeFirestore();
-            },
-            (error) => {
-                console.warn('❌ Error de geolocalización:', error);
-                // Usar Bogotá como fallback
-                initializeMap(BOGOTA, 12);
-                statusEl.textContent = 'Usando ubicación por defecto - ' + new Date().toLocaleTimeString();
-                
-                // Inicializar Firestore
-                initializeFirestore();
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000
-            }
-        );
-    } else {
-        // Navegador no soporta geolocalización
-        console.log('❌ Geolocalización no soportada');
-        initializeMap(BOGOTA, 12);
-        statusEl.textContent = 'Geolocalización no soportada - ' + new Date().toLocaleTimeString();
-        initializeFirestore();
-    }
+    console.log('🚀 Iniciando aplicación en modo VISOR');
+    
+    // Inicializar mapa con ubicación por defecto (NO con geolocalización del visor)
+    initializeMap(BOGOTA, 12);
+    statusEl.textContent = 'Conectando... - ' + new Date().toLocaleTimeString();
+    
+    // Inicializar Firestore para seguir a la persona en emergencia
+    initializeFirestore();
 }
 
 // Forzar redimensionamiento después de que todo cargue
@@ -191,7 +165,7 @@ document.getElementById('center').addEventListener('click', () => {
     if (map && marker) {
         const markerPos = marker.getLatLng();
         if (markerPos) {
-            console.log('🎯 Centrando en marcador:', markerPos);
+            console.log('🎯 Centrando en persona en emergencia:', markerPos);
             map.setView(markerPos, Math.max(map.getZoom(), 14), { 
                 animate: true,
                 duration: 1.0
@@ -219,16 +193,5 @@ document.getElementById('end').addEventListener('click', () => {
 });
 
 // Iniciar la aplicación
-console.log('🚀 Iniciando aplicación MÜRA...');
+console.log('🚀 Iniciando aplicación MÜRA en modo VISOR...');
 initializeApp();
-
-// Debug: información del mapa después de inicializar
-setTimeout(() => {
-    if (map) {
-        console.log('📊 Estado final del mapa:', {
-            center: map.getCenter(),
-            zoom: map.getZoom(),
-            size: map.getSize()
-        });
-    }
-}, 2000);
